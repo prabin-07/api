@@ -2,7 +2,14 @@ const GetAll=(req,res)=>{
     res.json({message:" fetched all data"})
 }
 const CreateOne=(req,res)=>{
-    res.json({message:" created one data"})
+
+      const {name,task}=req.body
+      const datas={
+        name:name,
+        task:task
+      }
+
+    res.json({datas})
 }
 
 const DeleteOne=(req,res)=>{
