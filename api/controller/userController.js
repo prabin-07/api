@@ -1,27 +1,28 @@
 const user = require('../models/userModel')
 const bcrypt = require('bcrypt')
-const jstoken = require('jsonwebtoken')
+const jwt = require('jsonwebtoken')
 
 
 const login = async (req,res) =>{
     let {email,password} = req.body
     if(!email || !password){
-        let error=new Error("All field requireed");
+        let error=new Error("All field required");
         error.statusCode=400;
         throw error;
     }
-    let User= await user.findOne({username:email})
+    let User= await user.findOne({email:email})
     if(!User){
         let error= new Error("Invalid email!")
         error.statusCode=400
         throw error
     }
-    let match=await bcrypt.compare(password,User.userPass)
+    let match=await bcrypt.compare(password,User.password)
     if(!match){
         let error = new Error("Invalid Password")
         error.statusCode=400
         throw error
     }
+
     const accessToken = jwt.sign({
         user:{
             username : User.username,
@@ -30,29 +31,29 @@ const login = async (req,res) =>{
             tokentype : "access"
         }
     },
-    process.env.ACCESSTOK,
+    process.env.ACCESSTOKEN,
     {expiresIn:"15min"}
-);
+    );
 
-const refreshToken = jwt.sign({
-    userid:User._id,
-    tokentype : "refresh"
-},
-process.env.REFRESH,
-{expiresIn:"7d"}
-);
+    const refreshToken = jwt.sign({ //creates jwt token
+        userid:User._id,
+        tokentype : "refresh"
+    },
+    process.env.REFRESH,
+    {expiresIn:"7d"}
+    );
 
-res.cookie("refreshtoken", refreshToken,{
-    httpOnly:true,
-    secure: true,
-    sameSite:"lax",
-    maxAge:7*24*60*60*1000
-});
+    res.cookie("refreshtoken", refreshToken,{
+        httpOnly:true,
+        secure: true,
+        sameSite:"lax",
+        maxAge:7*24*60*60*1000
+    });
 
-res.status(200).json({
-    message:"Login Successful",
-    accessToken
-});
+    res.status(200).json({
+        message:"Login Successful",
+        accessToken
+    });
 }
 
 const register = async (req,res) =>{
