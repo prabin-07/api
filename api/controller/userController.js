@@ -27,24 +27,24 @@ const login = async (req,res) =>{
             username : User.username,
             email : User.email,
             id : User._id,
-            tokentype : "access"
+            tokenType : "access"
         }
     },
-    process.env.ACCESSTOKEN,
+    process.env.ACCESS_TOKEN_SECRET,
     {expiresIn:"15min"}
     );
 
     const refreshToken = jwt.sign({ //creates jwt token
         userid:User._id,
-        tokentype : "refresh"
+        tokenType : "refresh"
     },
-    process.env.REFRESH,
+    process.env.REFRESH_TOKEN_SECRET,
     {expiresIn:"7d"}
     );
 
     res.cookie("refreshtoken", refreshToken,{
         httpOnly:true,
-        secure: true,
+        secure: false,
         sameSite:"lax",
         maxAge:7*24*60*60*1000
     });
@@ -77,7 +77,7 @@ const register = async (req,res) =>{
 
 const Refresh = async (req, res) => {
     // Get refresh token from cookie
-    const refreshToken = req.cookies.refreshToken;
+    const refreshToken = req.cookies.refreshtoken;
     if (!refreshToken) {
         const error = new Error("Refresh token missing");
         error.statusCode = 401;
@@ -100,7 +100,7 @@ const Refresh = async (req, res) => {
     // Generate new access token
     const newAccessToken = jwt.sign(
         {
-            userId: decoded.userId,
+            userid: decoded.userid,
             tokenType: "access"
         },
         process.env.ACCESS_TOKEN_SECRET,
@@ -117,7 +117,7 @@ const Refresh = async (req, res) => {
 // LOGOUT
 const Logout = async (req, res) => {
     // Clear refresh token cookie
-    res.clearCookie("refreshToken", {
+    res.clearCookie("refreshtoken", {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "lax"
